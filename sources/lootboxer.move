@@ -27,7 +27,6 @@ module hack::lootboxer {
 
     public struct LootboxData has key {
         id: UID,
-        balance: Balance<SUI>,
         lootbox: address,
         public_key: vector<u8>,
         assets: vector<AssetWithProbability>,
@@ -63,12 +62,11 @@ module hack::lootboxer {
     /// Initializes Lootbox
     /// Default asset probability is set to 100%, currently requires some initial_default_asset balance
     /// TODO: Default asset should be treated as a blank, drawing default asset == not winning
-    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, coin: Coin<SUI>, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
-        assert!(coin.value() > 0, EInsufficientBalance);
+    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
+        assert!(initial_default_asset.value() > 0, EInsufficientBalance);
 
         let lootbox_data = LootboxData {
             id: object::new(ctx),
-            balance: coin.into_balance(),
             lootbox: ctx.sender(),
             assets: vector::empty(),
             default_asset: AssetWithProbability {
@@ -189,6 +187,27 @@ module hack::lootboxer {
         };
 
         sum
+    }
+
+    // Accessors
+
+    /// Returns the address of the lootbox
+    public fun lootbox(lootbox_data: &LootboxData): address {
+        lootbox_data.lootbox
+    }
+
+    /// Returns the public key of the lootbox
+    public fun public_key(lootbox_data: &LootboxData): vector<u8> {
+        lootbox_data.public_key
+    }
+
+    // For Testing
+    #[test_only]
+    public fun get_and_transfer_lootbox_admin_cap_for_testing(ctx: &mut TxContext) {
+        let lootbox_cap = LootboxCap {
+            id: object::new(ctx)
+        };
+        transfer::transfer(lootbox_cap, ctx.sender());
     }
 
     #[test_only]
