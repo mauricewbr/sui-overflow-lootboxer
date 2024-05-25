@@ -42,11 +42,36 @@ module hack::lootboxer_tests {
         212, 203, 120,  70,  86,  57, 230, 150,  21,  60,  24,  49
     ];
 
+    const BLS_SIG_1: vector<u8> = vector<u8> [
+        175,  38, 188, 119, 128, 205, 237, 223, 127,  57,  99,  63,
+        10,  25, 156, 246,  20, 189, 174, 252,   0,  30, 175, 193,
+        149, 241, 198, 106, 239, 127,  60,  59, 217, 147,  18, 172,
+        154, 241, 201,  38,  20,  84,  93,  18, 251,  77,   5, 245,
+        12, 133,  20,  16,  72, 177,  54, 165, 219, 227,  14, 116,
+        56, 251, 179, 156, 215, 195, 134,  65, 209,  47, 210,  54,
+        161, 155, 248,  11, 230, 251, 156,  70, 102, 103,   8,  29,
+        122, 156,  40, 121, 198, 220, 116,  73, 114,  66,  74, 217
+    ];
+
     #[test]
-    fun test_bls_signature_for_lootbox_draw() {
+    fun test_bls_signature_for_lootbox_draw_0() {
         let mut messageVector = GAME_RANDOMNESS;
         messageVector.append(vector<u8>[0]);
         let bls_sig = BLS_SIG_0;
+        let house_public_key = LOOTBOX_PUBLIC_KEY;
+        let is_sig_valid = bls12381_min_pk_verify(
+            &bls_sig,
+            &house_public_key,
+            &messageVector
+        );
+        assert!(is_sig_valid, 1);
+    }
+
+    #[test]
+    fun test_bls_signature_for_lootbox_draw_1() {
+        let mut messageVector = GAME_RANDOMNESS;
+        messageVector.append(vector<u8>[1]);
+        let bls_sig = BLS_SIG_1;
         let house_public_key = LOOTBOX_PUBLIC_KEY;
         let is_sig_valid = bls12381_min_pk_verify(
             &bls_sig,

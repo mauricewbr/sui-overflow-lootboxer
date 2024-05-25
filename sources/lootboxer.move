@@ -1,14 +1,10 @@
-
-
 module hack::lootboxer {
-    
     use sui::bls12381::bls12381_min_pk_verify;
     use sui::balance::{Self, Balance};
     use sui::hash::{blake2b256};
     use sui::coin::{Self, Coin};
     use sui::sui::SUI;
     use sui::package::{Self};
-
     use hack::counter_nft::Counter;
 
     // Error codes
@@ -25,7 +21,7 @@ module hack::lootboxer {
         probability: u8,
     }
 
-    public struct LootboxData has key {
+    public struct LootboxData has key, store {
         id: UID,
         lootbox: address,
         public_key: vector<u8>,
