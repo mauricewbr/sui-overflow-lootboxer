@@ -49,5 +49,4 @@ module hack::counter_nft {
     public fun count(self: &Counter): u64 {
         self.count
     }
-
 }

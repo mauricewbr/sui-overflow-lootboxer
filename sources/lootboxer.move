@@ -114,14 +114,14 @@ module hack::lootboxer {
 
     public fun draw_from_lootbox(
         user_randomness: vector<u8>, 
-        user_counter: &mut Counter,
+        _user_counter: &mut Counter,
         bls_sig: vector<u8>, // Vector of bls signature of lootbox id, player's random bytes and counter
         lootbox_data: &mut LootboxData, 
         ctx: &mut TxContext
     ) {
         // Handle randomness
         let mut messageVector = user_randomness;
-        messageVector.append(user_counter.increment_and_get());
+        messageVector.append(vector<u8>[0]); // TODO: not good. should increment and get user counter
 
         let is_sig_valid = bls12381_min_pk_verify(&bls_sig, &lootbox_data.public_key, &messageVector);
         assert!(is_sig_valid, EInvalidBlsSig);
@@ -144,6 +144,7 @@ module hack::lootboxer {
             if (selection_value < cumulative_probability) {
                 let player_rewards = balance::value(&lootbox_data.assets[i as u64].asset);
                 let coin = coin::take(&mut lootbox_data.assets[i as u64].asset, player_rewards, ctx);
+                std::debug::print(&coin);
                 transfer::public_transfer(coin, ctx.sender());
                 return // Exit after withdrawing the selected asset
             };
@@ -172,6 +173,7 @@ module hack::lootboxer {
     }
 
     // Helper function to convert the first byte of a hash output to an unsigned 8-bit integer
+    // TODO: not really due to the if in the while
     fun from_le_bytes(bytes: vector<u8>): u64 {
         let mut sum = 0u64;
         let mut multiplier = 1u64;
@@ -182,6 +184,9 @@ module hack::lootboxer {
         while (i < bytes_len) {
             let byte = &bytes[i];
             sum = sum + (*byte as u64) * multiplier;
+            if ((2^64 - 1) / 256 < multiplier) {
+                break
+            };
             multiplier = multiplier * 256;
             i = i + 1;
         };
@@ -213,5 +218,29 @@ module hack::lootboxer {
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(LOOTBOXER {}, ctx);
+    }
+
+    #[test_only]
+    public fun get_initial_default_asset_for_testing(lootbox_data: &mut LootboxData): &mut Balance<SUI> {
+        &mut lootbox_data.default_asset.asset
+    }
+
+
+    #[test_only]
+    public fun get_assets_len_for_testing(lootbox_data: &LootboxData): u64 {
+        lootbox_data.assets.length()
+    }
+
+    #[test_only]
+    public fun get_total_balance_of_lootbox_for_testing(lootbox_data: &LootboxData): u64 {
+        let mut total_balance = lootbox_data.default_asset.asset.value();
+        let assets_len = lootbox_data.assets.length();
+        let mut i = 0;
+        while (i < assets_len) {
+            let asset = &lootbox_data.assets[i];
+            total_balance = total_balance + asset.asset.value();
+            i = i + 1;
+        };
+        total_balance
     }
 }

@@ -1,12 +1,13 @@
 #[test_only]
 module hack::lootboxer_tests {
 
-    use sui::coin::{Coin, Self};
+    use sui::coin::{Self};
     use sui::sui::SUI;
     use sui::test_scenario::{Self, Scenario};
     use sui::bls12381::bls12381_min_pk_verify;
 
     use hack::lootboxer::{Self as lb, LootboxCap, LootboxData};
+    use hack::counter_nft::{Self as counter_nft, Counter};
 
     const ADMIN: address = @0x65391674eb4210940ea98ae451237d9335920297e7c8abaeb7e05b221ee36917;
     const PLAYER: address = @0xfff196b9e146b115301408f624903fc488f42d357a7fa6fc70f5751e3d0570fc;
@@ -55,28 +56,76 @@ module hack::lootboxer_tests {
         assert!(is_sig_valid, 1);
     }
 
-    // #[test]
-    // fun test_initialize_lootbox_data() {
-    //     let mut scenario = test_scenario::begin(ADMIN);
+    #[test]
+    fun test_initialize_lootbox_data() {
+        let mut scenario = test_scenario::begin(ADMIN);
 
-    //     scenario.initialize_lootbox_data_for_test(ADMIN, INITIAL_LOOTBOX_BALANCE);
+        scenario.initialize_lootbox_data_for_test(ADMIN, INITIAL_LOOTBOX_BALANCE);
 
-    //     scenario.next_tx(ADMIN);
-    //     {
-    //         // validate that the house data is created
-    //         let lootbox_data = scenario.take_shared<LootboxData>();
-    //         assert!(lootbox_data.public_key() == LOOTBOX_PUBLIC_KEY, 1);
-    //         assert!(lootbox_data.lootbox() == ADMIN, 2);
-    //         test_scenario::return_shared<LootboxData>(lootbox_data);
+        scenario.next_tx(ADMIN);
+        {
+            // validate that the house data is created
+            let lootbox_data = scenario.take_shared<LootboxData>();
+            assert!(lootbox_data.public_key() == LOOTBOX_PUBLIC_KEY, 1);
+            assert!(lootbox_data.lootbox() == ADMIN, 2);
+            assert!(lb::get_total_balance_of_lootbox_for_testing(&lootbox_data) == INITIAL_LOOTBOX_BALANCE);
+            test_scenario::return_shared<LootboxData>(lootbox_data);
 
-    //         // and that the adminHouseCap was burnt
-    //         let adminOwnedObjects: vector<ID> = scenario.ids_for_sender<LootboxCap>();
-    //         assert!(adminOwnedObjects.length() == 0, 2);
-    //     };
+            // and that the adminHouseCap was burnt
+            let adminOwnedObjects: vector<ID> = scenario.ids_for_sender<LootboxCap>();
+            assert!(adminOwnedObjects.length() == 0, 2);
+        };
 
-    //     scenario.end();
-    // }
+        scenario.end();
+    }
 
+    #[test]
+    fun test_add_assets() {
+        let mut scenario = test_scenario::begin(ADMIN);
+        scenario.initialize_lootbox_data_for_test(ADMIN, INITIAL_LOOTBOX_BALANCE);
+        scenario.next_tx(ADMIN);
+        {            
+            let mut lootbox_data = scenario.take_shared<LootboxData>();
+            let balance = lb::get_initial_default_asset_for_testing(&mut lootbox_data);
+            let another_asset = coin::take<SUI>(balance, INITIAL_LOOTBOX_BALANCE / 2, scenario.ctx());
+            lb::add_lootbox_asset(&mut lootbox_data, scenario.ctx(), another_asset, 20);
+
+            assert!(lb::get_assets_len_for_testing(&lootbox_data) == 1);
+            assert!(lb::get_total_balance_of_lootbox_for_testing(&lootbox_data) == INITIAL_LOOTBOX_BALANCE);
+
+            test_scenario::return_shared<LootboxData>(lootbox_data);
+        };
+        scenario.end();
+    }
+
+    #[test]
+    fun test_draw() {
+        let mut scenario = test_scenario::begin(ADMIN);
+        scenario.initialize_lootbox_data_for_test(ADMIN, INITIAL_LOOTBOX_BALANCE);
+        scenario.next_tx(ADMIN);
+        {
+            let mut lootbox_data = scenario.take_shared<LootboxData>();
+            let balance = lb::get_initial_default_asset_for_testing(&mut lootbox_data);
+            let another_asset = coin::take<SUI>(balance, INITIAL_LOOTBOX_BALANCE / 2, scenario.ctx());
+            lb::add_lootbox_asset(&mut lootbox_data, scenario.ctx(), another_asset, 20);
+            test_scenario::return_shared<LootboxData>(lootbox_data);
+        };
+        scenario.next_tx(PLAYER);
+        {
+            counter_nft::mint_and_transfer(scenario.ctx());
+        };
+        scenario.next_tx(PLAYER);
+        {
+            let mut lootbox_data = scenario.take_shared<LootboxData>();
+            let mut counter = scenario.take_from_sender<Counter>();
+            lb::draw_from_lootbox(GAME_RANDOMNESS, &mut counter, BLS_SIG_0, &mut lootbox_data, scenario.ctx());
+            assert!(lb::get_total_balance_of_lootbox_for_testing(&lootbox_data) < INITIAL_LOOTBOX_BALANCE);
+            test_scenario::return_shared<LootboxData>(lootbox_data);
+            scenario.return_to_sender(counter);
+        };
+
+        scenario.end();
+    }
 
     //  --- Helper functions ---
 
@@ -103,5 +152,4 @@ module hack::lootboxer_tests {
             );
         }
     }
-
 }
