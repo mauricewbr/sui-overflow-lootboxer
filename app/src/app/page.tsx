@@ -2,6 +2,8 @@
 
 'use client';
 
+import { LootboxCard } from '@/components/lootbox/LootboxCard';
+import { useLootbox } from '@/hooks/useLootbox';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 
 export default function Home() {
@@ -13,6 +15,8 @@ export default function Home() {
 
     const account = useCurrentAccount();
 
+    const { lootboxData, handleFetchLootboxes } = useLootbox();
+
     if (!account) {
         return (
             <div className="text-center font-normal">
@@ -21,9 +25,35 @@ export default function Home() {
         );
     }
 
+    if (!lootboxData) {
+        return (
+            <>
+                <div className="text-center font-normal">
+                    No lootboxes found.
+                </div>
+                <div
+                    className="w-fit p-2 rounded-lg bg-white cursor-pointer"
+                    onClick={() => handleFetchLootboxes()}
+                >
+                    Refresh
+                </div>
+            </>
+        );
+    }
+
     return (
         <div className="relative min-h-[60vh] text-center font-bold text-xl">
-            <div>Eyyyyyy</div>
+            <div className="flex justify-between p-8 gap-8 rounded-lg border border-black">
+                {lootboxData.map((lootbox) => (
+                    <LootboxCard key={lootbox.id} lootbox={lootbox} />
+                ))}
+            </div>
+            <div
+                className="w-fit p-2 rounded-lg bg-white cursor-pointer"
+                onClick={() => {}}
+            >
+                Refresh
+            </div>
         </div>
     );
 }
