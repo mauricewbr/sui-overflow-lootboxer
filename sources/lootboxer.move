@@ -1,14 +1,10 @@
-
-
 module hack::lootboxer {
-    
     use sui::bls12381::bls12381_min_pk_verify;
     use sui::balance::{Self, Balance};
     use sui::hash::{blake2b256};
     use sui::coin::{Self, Coin};
     use sui::sui::SUI;
     use sui::package::{Self};
-
     use hack::counter_nft::Counter;
 
     // Error codes
@@ -25,9 +21,8 @@ module hack::lootboxer {
         probability: u8,
     }
 
-    public struct LootboxData has key {
+    public struct LootboxData has key, store {
         id: UID,
-        balance: Balance<SUI>,
         lootbox: address,
         public_key: vector<u8>,
         assets: vector<AssetWithProbability>,
@@ -63,12 +58,11 @@ module hack::lootboxer {
     /// Initializes Lootbox
     /// Default asset probability is set to 100%, currently requires some initial_default_asset balance
     /// TODO: Default asset should be treated as a blank, drawing default asset == not winning
-    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, coin: Coin<SUI>, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
-        assert!(coin.value() > 0, EInsufficientBalance);
+    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
+        assert!(initial_default_asset.value() > 0, EInsufficientBalance);
 
         let lootbox_data = LootboxData {
             id: object::new(ctx),
-            balance: coin.into_balance(),
             lootbox: ctx.sender(),
             assets: vector::empty(),
             default_asset: AssetWithProbability {
@@ -116,14 +110,14 @@ module hack::lootboxer {
 
     public fun draw_from_lootbox(
         user_randomness: vector<u8>, 
-        user_counter: &mut Counter,
+        _user_counter: &mut Counter,
         bls_sig: vector<u8>, // Vector of bls signature of lootbox id, player's random bytes and counter
         lootbox_data: &mut LootboxData, 
         ctx: &mut TxContext
     ) {
         // Handle randomness
         let mut messageVector = user_randomness;
-        messageVector.append(user_counter.increment_and_get());
+        messageVector.append(vector<u8>[0]); // TODO: not good. should increment and get user counter
 
         let is_sig_valid = bls12381_min_pk_verify(&bls_sig, &lootbox_data.public_key, &messageVector);
         assert!(is_sig_valid, EInvalidBlsSig);
@@ -146,6 +140,7 @@ module hack::lootboxer {
             if (selection_value < cumulative_probability) {
                 let player_rewards = balance::value(&lootbox_data.assets[i as u64].asset);
                 let coin = coin::take(&mut lootbox_data.assets[i as u64].asset, player_rewards, ctx);
+                std::debug::print(&coin);
                 transfer::public_transfer(coin, ctx.sender());
                 return // Exit after withdrawing the selected asset
             };
@@ -174,6 +169,7 @@ module hack::lootboxer {
     }
 
     // Helper function to convert the first byte of a hash output to an unsigned 8-bit integer
+    // TODO: not really due to the if in the while
     fun from_le_bytes(bytes: vector<u8>): u64 {
         let mut sum = 0u64;
         let mut multiplier = 1u64;
@@ -184,6 +180,9 @@ module hack::lootboxer {
         while (i < bytes_len) {
             let byte = &bytes[i];
             sum = sum + (*byte as u64) * multiplier;
+            if ((2^64 - 1) / 256 < multiplier) {
+                break
+            };
             multiplier = multiplier * 256;
             i = i + 1;
         };
@@ -191,8 +190,53 @@ module hack::lootboxer {
         sum
     }
 
+    // Accessors
+
+    /// Returns the address of the lootbox
+    public fun lootbox(lootbox_data: &LootboxData): address {
+        lootbox_data.lootbox
+    }
+
+    /// Returns the public key of the lootbox
+    public fun public_key(lootbox_data: &LootboxData): vector<u8> {
+        lootbox_data.public_key
+    }
+
+    // For Testing
+    #[test_only]
+    public fun get_and_transfer_lootbox_admin_cap_for_testing(ctx: &mut TxContext) {
+        let lootbox_cap = LootboxCap {
+            id: object::new(ctx)
+        };
+        transfer::transfer(lootbox_cap, ctx.sender());
+    }
+
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(LOOTBOXER {}, ctx);
+    }
+
+    #[test_only]
+    public fun get_initial_default_asset_for_testing(lootbox_data: &mut LootboxData): &mut Balance<SUI> {
+        &mut lootbox_data.default_asset.asset
+    }
+
+
+    #[test_only]
+    public fun get_assets_len_for_testing(lootbox_data: &LootboxData): u64 {
+        lootbox_data.assets.length()
+    }
+
+    #[test_only]
+    public fun get_total_balance_of_lootbox_for_testing(lootbox_data: &LootboxData): u64 {
+        let mut total_balance = lootbox_data.default_asset.asset.value();
+        let assets_len = lootbox_data.assets.length();
+        let mut i = 0;
+        while (i < assets_len) {
+            let asset = &lootbox_data.assets[i];
+            total_balance = total_balance + asset.asset.value();
+            i = i + 1;
+        };
+        total_balance
     }
 }
