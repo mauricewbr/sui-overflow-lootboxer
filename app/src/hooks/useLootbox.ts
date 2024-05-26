@@ -1,6 +1,7 @@
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useState } from 'react';
 import { useFetchExistingLootboxes } from './useFetchExistingLootboxes';
+import { useGetLootboxesFromRegistry } from './useGetLootboxesFromRegistry';
 
 interface LootboxData {
     id: string;
@@ -21,6 +22,8 @@ export const useLootbox = (): UseLootbox => {
         useFetchExistingLootboxes();
 
     const account = useCurrentAccount();
+
+    const { handleFetchFromRegistry } = useGetLootboxesFromRegistry();
 
     const [lootboxData, setLootboxData] = useState<LootboxData[] | null>(null);
 
