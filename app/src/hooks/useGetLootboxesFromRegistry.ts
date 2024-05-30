@@ -66,7 +66,7 @@ export const useGetLootboxesFromRegistry = (): UseGetLootboxesFromRegistry => {
             .catch((err) => {
                 console.log(err);
                 setIsMoveLoading(false);
-                return null;
+                return null
             });
     }, []);
 

@@ -4,7 +4,23 @@
 
 import { LootboxCard } from '@/components/lootbox/LootboxCard';
 import { useLootbox } from '@/hooks/useLootbox';
-import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
+import { SuiObjectData } from '@mysten/sui.js/client';
+
+function getLootboxData(data: SuiObjectData) {
+    if (data.content?.dataType !== 'moveObject') {
+        return null;
+    }
+
+    return data.content.fields as {
+        lootbox: string;
+        public_key: number[];
+        assets: { asset: { value: number }; probability: number }[];
+        default_asset: { asset: { value: number }; probability: number };
+        fees: { value: number };
+        base_fee_in_bp: number;
+    };
+}
 
 export default function Home() {
     // const { address } = useZkLogin();
@@ -16,6 +32,17 @@ export default function Home() {
     const account = useCurrentAccount();
 
     const { lootboxData, handleFetchLootboxes } = useLootbox();
+
+    const { data } = useSuiClientQuery('getObject', {
+        id: '1',
+        options: {
+            showContent: true,
+        },
+    });
+
+    if (!data?.data) return <div>Not found</div>;
+
+    console.log('getLootboxData result: ', getLootboxData(data.data));
 
     if (!account) {
         return (
