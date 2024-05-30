@@ -34,3 +34,6 @@ Move.lock
 setup/*.env
 .publish.res.json
 .vercel
+
+.vscode
+.prettierrc
