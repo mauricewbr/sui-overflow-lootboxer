@@ -34,7 +34,8 @@ export default function Home() {
     const { lootboxData, handleFetchLootboxes } = useLootbox();
 
     const { data } = useSuiClientQuery('getObject', {
-        id: '1',
+        // id: '0xa9a9b00be09f7461dfe4f55c9761018dac6439603611554754266269f3dbcd5c',
+        id: '0x08eeccba583b73bca262a3ae2b332851e1acbd381ae9910e32824d722bfeedd1',
         options: {
             showContent: true,
         },
@@ -43,6 +44,7 @@ export default function Home() {
     if (!data?.data) return <div>Not found</div>;
 
     console.log('getLootboxData result: ', getLootboxData(data.data));
+    console.log('getLootboxData result: ', data);
 
     if (!account) {
         return (

@@ -20,6 +20,8 @@ export const ProvidersAndLayout = ({
     const queryClient = new QueryClient();
     const { networkConfig } = createNetworkConfig({
         localnet: { url: getFullnodeUrl('localnet') },
+        devnet: { url: getFullnodeUrl('devnet') },
+        testnet: { url: getFullnodeUrl('testnet') },
         mainnet: { url: getFullnodeUrl('mainnet') },
     });
 
@@ -27,7 +29,7 @@ export const ProvidersAndLayout = ({
         <QueryClientProvider client={queryClient}>
             <SuiClientProvider
                 networks={networkConfig}
-                defaultNetwork="localnet"
+                defaultNetwork="testnet"
             >
                 <WalletProvider>
                     <EnokiFlowProvider
