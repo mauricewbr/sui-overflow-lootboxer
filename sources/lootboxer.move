@@ -6,6 +6,7 @@ module hack::lootboxer {
     use sui::sui::SUI;
     use sui::package::{Self};
     use hack::counter_nft::Counter;
+    use hack::registry::RegistryData;
 
     // Error codes
 
@@ -24,6 +25,7 @@ module hack::lootboxer {
     public struct LootboxData has key, store {
         id: UID,
         lootbox: address,
+        registry: address,
         public_key: vector<u8>,
         assets: vector<AssetWithProbability>,
         default_asset: AssetWithProbability,
@@ -58,12 +60,14 @@ module hack::lootboxer {
     /// Initializes Lootbox
     /// Default asset probability is set to 100%, currently requires some initial_default_asset balance
     /// TODO: Default asset should be treated as a blank, drawing default asset == not winning
-    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
+    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, registry: &mut RegistryData, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
         assert!(initial_default_asset.value() > 0, EInsufficientBalance);
+        let lootbox_address = ctx.sender();
 
         let lootbox_data = LootboxData {
             id: object::new(ctx),
-            lootbox: ctx.sender(),
+            lootbox: lootbox_address,
+            registry: registry.registry(),
             assets: vector::empty(),
             default_asset: AssetWithProbability {
                 asset: initial_default_asset.into_balance(),
@@ -76,6 +80,8 @@ module hack::lootboxer {
 
         let LootboxCap { id } = lootbox_cap;
         object::delete(id);
+        
+        registry.register_lootbox(ctx, lootbox_address);
 
         transfer::share_object(lootbox_data);
     }
@@ -110,14 +116,14 @@ module hack::lootboxer {
 
     public fun draw_from_lootbox(
         user_randomness: vector<u8>, 
-        _user_counter: &mut Counter,
+        user_counter: &mut Counter,
         bls_sig: vector<u8>, // Vector of bls signature of lootbox id, player's random bytes and counter
         lootbox_data: &mut LootboxData, 
         ctx: &mut TxContext
     ) {
         // Handle randomness
         let mut messageVector = user_randomness;
-        messageVector.append(vector<u8>[0]); // TODO: not good. should increment and get user counter
+        messageVector.append(user_counter.increment_and_get());
 
         let is_sig_valid = bls12381_min_pk_verify(&bls_sig, &lootbox_data.public_key, &messageVector);
         assert!(is_sig_valid, EInvalidBlsSig);
