@@ -7,6 +7,7 @@ module hack::lootboxer {
     use sui::package::{Self};
     use hack::counter_nft::Counter;
     use hack::registry::RegistryData;
+    use hack::guard_nft::{GuardNFT, burn};
 
     // Error codes
 
@@ -14,6 +15,7 @@ module hack::lootboxer {
     const EInsufficientBalance: u64 = 1;
     const EInsufficientDefaultProbability: u64 = 2;
     const EInvalidBlsSig: u64 = 3;
+    const EAccountMustOwnNFT: u64 = 4;
 
     // Structs
 
@@ -26,6 +28,7 @@ module hack::lootboxer {
         id: UID,
         lootbox: address,
         registry: address,
+        nft_id: ID,
         public_key: vector<u8>,
         assets: vector<AssetWithProbability>,
         default_asset: AssetWithProbability,
@@ -60,23 +63,26 @@ module hack::lootboxer {
     /// Initializes Lootbox
     /// Default asset probability is set to 100%, currently requires some initial_default_asset balance
     /// TODO: Default asset should be treated as a blank, drawing default asset == not winning
-    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, registry: &mut RegistryData, public_key: vector<u8>, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
+    public fun initialize_lootbox_data(lootbox_cap: LootboxCap, registry: &mut RegistryData, public_key: vector<u8>, nft_id: ID, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
         assert!(initial_default_asset.value() > 0, EInsufficientBalance);
         let lootbox_address = ctx.sender();
 
+        // TODO: create NFT
         let lootbox_data = LootboxData {
             id: object::new(ctx),
             lootbox: lootbox_address,
-            registry: registry.registry(),
+            registry: registry.admin(),
             assets: vector::empty(),
             default_asset: AssetWithProbability {
                 asset: initial_default_asset.into_balance(),
                 probability: 100,
             },
+            nft_id,
             public_key,
             fees: balance::zero(),
             base_fee_in_bp: 100
         };
+
 
         let LootboxCap { id } = lootbox_cap;
         object::delete(id);
@@ -119,8 +125,13 @@ module hack::lootboxer {
         user_counter: &mut Counter,
         bls_sig: vector<u8>, // Vector of bls signature of lootbox id, player's random bytes and counter
         lootbox_data: &mut LootboxData, 
-        ctx: &mut TxContext
+        ctx: &mut TxContext,
+        nft: &GuardNFT,
+        nft_balance: &Balance<GuardNFT>,
     ) {
+        // Check NFT ownership
+        assert!(nft_balance.value() > 0, EAccountMustOwnNFT);
+
         // Handle randomness
         let mut messageVector = user_randomness;
         messageVector.append(user_counter.increment_and_get());
@@ -152,6 +163,8 @@ module hack::lootboxer {
             };
             i = i + 1;
         };
+
+        // TODO: Burn NFT
 
         // Handle the case where no asset is selected (should not happen if probabilities sum to 100%)
         abort(404) // No valid asset found

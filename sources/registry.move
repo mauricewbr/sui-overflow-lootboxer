@@ -1,18 +1,16 @@
 module hack::registry {
-    use sui::vec_map::{Self, VecMap};
     use sui::package::{Self};
-    use hack::lootboxer::LootboxData;
 
     // Error codes
 
-    const ECallerNotRegistry: u64 = 0;
+    const ECallerNotAdmin: u64 = 0;
 
     // Structs
 
-    public struct RegistryData has key {
+    public struct RegistryData has key, store {
         id: UID,
-        registry: address,
-        lootboxes: VecMap<address, LootboxData>,
+        admin: address,
+        lootboxes: vector<address>,
     }
 
     /// [From Sui example] A one-time use capability to initialize the registry data; created and sent
@@ -44,8 +42,8 @@ module hack::registry {
     public fun initialize_registry_data(registry_cap: RegistryCap, ctx: &mut TxContext) {
         let registry_data = RegistryData {
             id: object::new(ctx),
-            registry: ctx.sender(),
-            lootboxes: vec_map::empty(),
+            admin: ctx.sender(),
+            lootboxes: vector::empty(),
         };
 
         let RegistryCap { id } = registry_cap;
@@ -54,20 +52,20 @@ module hack::registry {
         transfer::share_object(registry_data);
     }
 
-    public fun register_lootbox(registry_data: &mut RegistryData, ctx: &mut TxContext, new_lootbox_address: address, new_lootbox: LootboxData) {
-        assert!(ctx.sender() == registry_data.registry, ECallerNotRegistry);
-        registry_data.lootboxes.insert(new_lootbox_address, new_lootbox);
+    public fun register_lootbox(registry_data: &mut RegistryData, ctx: &mut TxContext, new_lootbox: address) {
+        assert!(ctx.sender() == registry_data.admin, ECallerNotAdmin);
+        vector::push_back(&mut registry_data.lootboxes, new_lootbox);
     }
     
-    public fun get_lootboxes(registry_data: &RegistryData): &VecMap<address, LootboxData> {
+    public fun get_lootboxes(registry_data: &RegistryData): &vector<address> {
         &registry_data.lootboxes
     }
 
     // Accessors
 
-    /// Returns the address of the registry
-    public fun registry(registry_data: &RegistryData): address {
-        registry_data.registry
+    /// Returns the admin of the registry
+    public fun admin(registry_data: &RegistryData): address {
+        registry_data.admin
     }
 
     // For Testing
