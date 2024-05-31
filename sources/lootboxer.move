@@ -65,12 +65,12 @@ module hack::lootboxer {
     /// TODO: Default asset should be treated as a blank, drawing default asset == not winning
     public fun initialize_lootbox_data(lootbox_cap: LootboxCap, registry: &mut RegistryData, public_key: vector<u8>, nft_id: ID, initial_default_asset: Coin<SUI>, ctx: &mut TxContext) {
         assert!(initial_default_asset.value() > 0, EInsufficientBalance);
-        let lootbox_address = ctx.sender();
+        let sender = ctx.sender();
 
         // TODO: create NFT
         let lootbox_data = LootboxData {
             id: object::new(ctx),
-            lootbox: lootbox_address,
+            lootbox: sender,
             registry: registry.admin(),
             assets: vector::empty(),
             default_asset: AssetWithProbability {
@@ -87,7 +87,7 @@ module hack::lootboxer {
         let LootboxCap { id } = lootbox_cap;
         object::delete(id);
         
-        registry.register_lootbox(ctx, lootbox_address);
+        registry.register_lootbox(ctx, lootbox_data.id.uid_as_inner().id_to_address());
 
         transfer::share_object(lootbox_data);
     }

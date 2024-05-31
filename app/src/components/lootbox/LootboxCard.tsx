@@ -1,67 +1,64 @@
-import Image from 'next/image';
-import Link from 'next/link';
-
 interface LootboxInfo {
-    id: string;
-    lootboxName?: string;
-    lootboxCreator?: string;
-    lootboxAssets?: string[];
-    lootboxImage?: string;
+    lootbox: string;
+    registry: string;
+    nft_id: string;
+    public_key: string[];
+    assets: any[];
+    default_asset: any;
+    fees: any;
+    base_fee_in_bp: number;
 }
 
 export const LootboxCard = ({ lootbox }: { lootbox: LootboxInfo }) => {
+    const shortenAddress = (address: string) => {
+        return address.length > 10
+            ? `${address.slice(0, 6)}...${address.slice(-4)}`
+            : address;
+    };
+
     return (
-        <Link
-            href={{
-                pathname: `/lootbox/${lootbox.id}`,
-                query: { _id: lootbox.id },
-            }}
-            passHref
-        >
-            <div className="w-full p-8 border border-gray-300 rounded-lg shadow-lg">
-                {/* Upper Image Section */}
-                <div className="h-40 mb-4 overflow-hidden rounded-lg">
-                    {lootbox.lootboxImage ? (
-                        <Image
-                            src={lootbox.lootboxImage}
-                            alt="Lootbox"
-                            className="object-cover w-full h-full"
-                            width={100}
-                            height={100}
-                        />
+        <div className="w-[350px] h-[300px] p-8 border border-gray-300 rounded-lg shadow-lg">
+            <div className="space-y-6">
+                <h1 className="-mb-4">Lootbox</h1>
+                <h2 className="mb-2 text-lg font-semibold text-gray-800">
+                    {lootbox.public_key
+                        ? shortenAddress(lootbox.public_key.join(''))
+                        : 'Unnamed Lootbox'}
+                </h2>
+                <p className="mb-4 text-sm text-gray-600">
+                    by{' '}
+                    {lootbox.lootbox
+                        ? shortenAddress(lootbox.lootbox)
+                        : 'Unknown Creator'}
+                </p>
+                <div>
+                    {lootbox.assets && lootbox.assets.length > 0 ? (
+                        lootbox.assets.map((asset, index) => (
+                            <p key={index} className="text-sm text-gray-700">
+                                {asset}
+                            </p>
+                        ))
                     ) : (
-                        <div className="flex items-center justify-center w-full h-full bg-gray-200">
-                            <span className="text-gray-400">No Image</span>
-                        </div>
+                        <p className="text-sm text-gray-400">
+                            No assets available
+                        </p>
                     )}
                 </div>
-                {/* Lower Section */}
                 <div>
-                    <h2 className="mb-2 text-lg font-semibold text-gray-800">
-                        {lootbox.lootboxName || 'Unnamed Lootbox'}
-                    </h2>
-                    <p className="mb-4 text-sm text-gray-600">
-                        by {lootbox.lootboxCreator || 'Unknown Creator'}
+                    <p className="text-sm text-gray-700">
+                        {lootbox.default_asset.fields.asset}
                     </p>
-                    <div className="space-y-1">
-                        {lootbox.lootboxAssets &&
-                        lootbox.lootboxAssets.length > 0 ? (
-                            lootbox.lootboxAssets.map((asset, index) => (
-                                <p
-                                    key={index}
-                                    className="text-sm text-gray-700"
-                                >
-                                    {asset}
-                                </p>
-                            ))
-                        ) : (
-                            <p className="text-sm text-gray-400">
-                                No assets available
-                            </p>
-                        )}
-                    </div>
+                </div>
+                <div>
+                    {lootbox.assets && lootbox.assets.length > 0 ? (
+                        <button>draw from lootbox</button>
+                    ) : (
+                        <p className="text-sm text-gray-400">
+                            Cant draw without assets
+                        </p>
+                    )}
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };

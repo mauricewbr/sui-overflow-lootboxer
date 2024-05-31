@@ -1,8 +1,6 @@
-import { SuiClient, SuiObjectChangeCreated } from '@mysten/sui.js/client';
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { getBLSPublicKey } from '../bls/getBLSPublicKey';
-import { getKeypair } from '../keypair/getKeyPair';
+import { SuiClient, SuiObjectChangeCreated } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { getKeypair } from "../keypair/getKeypair";
 
 interface InitializeRegistryProps {
     suiClient: SuiClient;
@@ -11,36 +9,28 @@ interface InitializeRegistryProps {
 export const initializeRegistryData = async ({
     suiClient,
 }: InitializeRegistryProps): Promise<string | undefined> => {
-    console.log('Initializing RegistryData...');
+    console.log("Initializing RegistryData...");
     const tx = new TransactionBlock();
 
     const PACKAGE_ADDRESS =
-        '0x08eeccba583b73bca262a3ae2b332851e1acbd381ae9910e32824d722bfeedd1';
+        "0x5200d31152fcefbe44957c86fcf940c1a0ccff2cacedbed0558f25ec92057748";
     const REGISTRY_CAP =
-        '0x5db38a41429c2e15facdff6a3f49996aae8f92a1bbefa1e03caf73a817478159';
-    const ADMIN = process.env.ADMIN_SECRET_KEY!;
-    console.log(ADMIN);
+        "0x7f16ca18464a2d80526e1a6b6a6fd3d0335620dcf1b1af6e79ceea11516eea93";
+    const keypair = getKeypair(process.env.ADMIN_SECRET_KEY!);
 
-    let adminBLSPublicKey = getBLSPublicKey(ADMIN!);
-    console.log('adminBLSPubKey: ', adminBLSPublicKey);
-
+    tx.setGasBudget(1000000000);
     tx.moveCall({
         target: `${PACKAGE_ADDRESS}::registry::initialize_registry_data`,
-        arguments: [
-            tx.object(REGISTRY_CAP),
-            // tx.pure(Array.from(adminBLSPublicKey)),
-        ],
+        arguments: [tx.object(REGISTRY_CAP)],
     });
 
-    const keypair = new Ed25519Keypair();
-    console.log('keypair: ', keypair);
+    console.log(keypair.toSuiAddress());
 
     return suiClient
         .signAndExecuteTransactionBlock({
-            signer: getKeypair(ADMIN!),
-            // signer: keypair,
+            signer: keypair,
             transactionBlock: tx,
-            requestType: 'WaitForLocalExecution',
+            requestType: "WaitForLocalExecution",
             options: {
                 showObjectChanges: true,
                 showEffects: true,
@@ -48,20 +38,20 @@ export const initializeRegistryData = async ({
         })
         .then((resp) => {
             const status = resp?.effects?.status.status;
-            console.log('executed! status = ', status);
-            if (status !== 'success') {
-                throw new Error('RegistryData not created');
+            console.log("executed! status = ", status);
+            if (status !== "success") {
+                throw new Error("RegistryData not created");
             }
-            if (status === 'success') {
+            if (status === "success") {
                 const createdObjects = resp.objectChanges?.filter(
-                    ({ type }) => type === 'created',
+                    ({ type }) => type === "created"
                 ) as SuiObjectChangeCreated[];
                 const createdRegistryData = createdObjects.find(
                     ({ objectType }) =>
-                        objectType.endsWith('registry::RegistryData'),
+                        objectType.endsWith("registry::RegistryData")
                 );
                 if (!createdRegistryData) {
-                    throw new Error('RegistryData not created');
+                    throw new Error("RegistryData not created");
                 }
                 const { objectId: registryDataId } = createdRegistryData;
                 console.log({ registryDataId });
@@ -69,7 +59,7 @@ export const initializeRegistryData = async ({
             }
         })
         .catch((err) => {
-            console.error('Error = ', err);
+            console.error("Error = ", err);
             return undefined;
         });
 };
