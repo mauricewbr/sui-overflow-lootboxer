@@ -43,16 +43,9 @@ export default function Home() {
     return (
         <div className="relative min-h-[60vh] text-center font-bold text-xl">
             <div className="flex justify-between p-8 gap-8 rounded-lg border border-black">
-                <h1>Lootboxes</h1>
                 {lootboxData?.map((lootbox: LootboxData, index) => (
                     <LootboxCard key={index} lootbox={lootbox} />
                 ))}
-            </div>
-            <div
-                className="w-fit p-2 rounded-lg bg-white cursor-pointer"
-                onClick={() => {}}
-            >
-                Refresh
             </div>
         </div>
     );
