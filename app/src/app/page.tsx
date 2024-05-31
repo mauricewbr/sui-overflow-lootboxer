@@ -34,8 +34,7 @@ export default function Home() {
     const { lootboxData, handleFetchLootboxes } = useLootbox();
 
     const { data } = useSuiClientQuery('getObject', {
-        // id: '0xa9a9b00be09f7461dfe4f55c9761018dac6439603611554754266269f3dbcd5c',
-        id: '0x08eeccba583b73bca262a3ae2b332851e1acbd381ae9910e32824d722bfeedd1',
+        id: '0xb7d8b670d2d79f678da896007a3841f82ae17c574cc338ff2f442005be153dc3',
         options: {
             showContent: true,
         },
