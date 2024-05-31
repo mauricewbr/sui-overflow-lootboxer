@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "init-registry": "env-cmd -f .env ts-node src/scripts/00-initializeRegistryData"
+        "init-registry": "env-cmd -f .env ts-node src/scripts/00-initializeRegistryData",
+        "init-lootbox": "env-cmd -f .env ts-node src/scripts/01-initializeLootboxData"
     },
     "author": "",
     "license": "ISC",
