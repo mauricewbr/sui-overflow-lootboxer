@@ -1,6 +1,6 @@
 import hkdf from 'futoin-hkdf';
 
-export const getBLSSecreyKey = (privateKey: string) => {
+export const getBLSSecretKey = (privateKey: string) => {
     // initial key material
     const ikm = privateKey;
     const length = 32;

@@ -1,4 +1,4 @@
-import { config } from 'dotenv';
+import { config } from "dotenv";
 
 config({});
 export const SUI_NETWORK = process.env.SUI_NETWORK!;
@@ -14,8 +14,8 @@ export const LOOTBOX_DATA_ID = process.env.LOOTBOX_DATA_ID!;
 
 // console.log everything in the process.env object
 const keys = Object.keys(process.env);
-console.log('env contains ADMIN_ADDRESS:', keys.includes('ADMIN_ADDRESS'));
+console.log("env contains ADMIN_ADDRESS:", keys.includes("ADMIN_ADDRESS"));
 console.log(
-    'env contains ADMIN_SECRET_KEY:',
-    keys.includes('ADMIN_SECRET_KEY'),
+    "env contains ADMIN_SECRET_KEY:",
+    keys.includes("ADMIN_SECRET_KEY")
 );
