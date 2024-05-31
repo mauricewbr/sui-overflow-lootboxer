@@ -44,7 +44,7 @@ export const initializeLootboxData = async ({
             tx.object(LOOTBOX_CAP),
             tx.object(REGISTRY_ID),
             tx.pure(Array.from(adminBLSPublicKey)),
-            tx.object(NFT_ID),
+            tx.pure(NFT_ID),
             initialDefaultAsset,
         ],
     });
