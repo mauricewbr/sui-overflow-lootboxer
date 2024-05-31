@@ -15,13 +15,13 @@ export const initializeLootboxData = async ({
     const tx = new TransactionBlock();
 
     const PACKAGE_ADDRESS =
-        '0x08eeccba583b73bca262a3ae2b332851e1acbd381ae9910e32824d722bfeedd1';
+        '0x5200d31152fcefbe44957c86fcf940c1a0ccff2cacedbed0558f25ec92057748';
     const LOOTBOX_CAP =
-        '0xc6bad169e9acf8ea31e29331e193d9932474e48a5c6f04b37249795f2d796bec';
+        '0x4bcc205998d2eb6a77c6c6ef0beade084a1ebc7d28cd6a68014b3e3a5a1a47cc';
     const REGISTRY_ID =
-        '0xb7d8b670d2d79f678da896007a3841f82ae17c574cc338ff2f442005be153dc3';
+        '0xc103d5d0fddfed882db1c2fbbf86110e70296cbd23df0f541433f34c0e075863';
     const NFT_ID =
-        '0x48c0c4dc6a4a736c559f83d1146ecd51f8e39b5fb0803181d71da2bf93e4677f';
+        '0xad86225e145c18bbfe24dd54497f324e9b19f113bfcbe3c73d152483b01d980d';
 
     const keypair = getKeypair(process.env.ADMIN_SECRET_KEY!);
     let adminBLSPublicKey = getBLSPublicKey(process.env.ADMIN_SECRET_KEY!);
@@ -29,14 +29,6 @@ export const initializeLootboxData = async ({
         tx.pure(0.1 * Number(MIST_PER_SUI)),
     ]);
 
-    // tx.setGasPayment([
-    //     {
-    //         digest: 'G4MwXyT9gftXQzuFLFYCuVHJw6oPAhetQRJw122DaHed',
-    //         objectId:
-    //             '0x016354b42eab8839c37770a0f4f26d5356ca15693ef6324b2fa4df80cdf1f2b8',
-    //         version: 955507,
-    //     },
-    // ]); // TODO: Change hardcoded values
     tx.setGasBudget(1000000000);
     tx.moveCall({
         target: `${PACKAGE_ADDRESS}::lootboxer::initialize_lootbox_data`,
@@ -48,7 +40,6 @@ export const initializeLootboxData = async ({
             initialDefaultAsset,
         ],
     });
-    // tx.setSender(keypair.getPublicKey().toSuiAddress());
 
     console.log(keypair.toSuiAddress());
 

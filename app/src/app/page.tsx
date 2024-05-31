@@ -23,18 +23,12 @@ function getLootboxData(data: SuiObjectData) {
 }
 
 export default function Home() {
-    // const { address } = useZkLogin();
-
-    // if (!address) {
-    //   return <SignIn />
-    // }
-
     const account = useCurrentAccount();
 
     const { lootboxData, handleFetchLootboxes } = useLootbox();
 
     const { data } = useSuiClientQuery('getObject', {
-        id: '0xb7d8b670d2d79f678da896007a3841f82ae17c574cc338ff2f442005be153dc3',
+        id: '0xc103d5d0fddfed882db1c2fbbf86110e70296cbd23df0f541433f34c0e075863',
         options: {
             showContent: true,
         },
@@ -78,7 +72,7 @@ export default function Home() {
             </div>
             <div
                 className="w-fit p-2 rounded-lg bg-white cursor-pointer"
-                onClick={() => {}}
+                onClick={() => { }}
             >
                 Refresh
             </div>
