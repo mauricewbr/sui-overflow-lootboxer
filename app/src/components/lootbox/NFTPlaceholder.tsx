@@ -1,6 +1,5 @@
-import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { MintNFT } from './MintNFT';
-import { SuiClient } from '@mysten/sui.js/client';
+import { useOwnsNFT } from '@/hooks/useOwnsNFT';
 
 interface NFTPlaceholderParams {
     packageAddress: string;
@@ -10,19 +9,14 @@ interface NFTPlaceholderParams {
 }
 
 export const NFTPlaceholder = (props: NFTPlaceholderParams) => {
-    const { data: ownedObjects } = useSuiClientQuery('getOwnedObjects', {
-        owner: props.address,
+    const { owns } = useOwnsNFT({
+        address: props.address,
+        nftAddress: props.nftAddress
     });
-    let owned = false;
-    ownedObjects?.data.forEach((object) => {
-        if (object.data?.objectId == props.nftAddress) {
-            console.log("ok yay ", props.nftAddress);
-            owned = true;
-        }
-    });
+
     return (
         <>
-            {owned ? <></> :
+            {owns ? <></> :
                 <MintNFT
                     packageAddress={props.packageAddress}
                     nftAddress={props.nftAddress}

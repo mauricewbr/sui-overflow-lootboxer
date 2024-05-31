@@ -1,5 +1,5 @@
 import { useMintNFT } from '@/hooks/useMintNFT';
-import { SuiClient } from '@mysten/sui.js/client';
+import { usePromptCounter } from '@/hooks/usePromptCounter';
 
 interface MintNFTParams {
     packageAddress: string;
@@ -13,6 +13,5 @@ export const MintNFT = (props: MintNFTParams) => {
         nftAddress: props.nftAddress,
         registryAddress: props.registryAddress,
     });
-
     return (<></>);
 };

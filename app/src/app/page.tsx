@@ -1,5 +1,6 @@
 'use client';
 
+// import { CounterPlaceholder } from '@/components/lootbox/CounterPlaceholder';
 import { LootboxCard } from '@/components/lootbox/LootboxCard';
 import { NFTPlaceholder } from '@/components/lootbox/NFTPlaceholder';
 import { useLootbox } from '@/hooks/useLootbox';
@@ -80,6 +81,11 @@ export default function Home() {
                 nftAddress={NFT_ID}
                 registryAddress={REGISTRY_ID}
             />
+            {/* <CounterPlaceholder
+                address={new Ed25519PublicKey((account?.publicKey)).toSuiAddress()}
+                packageAddress={PACKAGE_ID}
+                registryAddress={REGISTRY_ID}
+            /> */}
             <div className="flex justify-between p-8 gap-8 rounded-lg border border-black">
                 {lootboxData.map((lootbox) => (
                     <LootboxCard key={lootbox.id} lootbox={lootbox} />
