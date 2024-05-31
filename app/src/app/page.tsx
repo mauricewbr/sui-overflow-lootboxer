@@ -2,23 +2,25 @@
 
 'use client';
 
+import { LootboxCard } from '@/components/lootbox/LootboxCard';
 import { useLootbox } from '@/hooks/useLootbox';
 import { useCurrentAccount } from '@mysten/dapp-kit';
+
+interface LootboxData {
+    lootbox: string;
+    registry: string;
+    nft_id: string;
+    public_key: string[];
+    assets: any[];
+    default_asset: any;
+    fees: any;
+    base_fee_in_bp: number;
+}
 
 export default function Home() {
     const account = useCurrentAccount();
 
-    const { lootboxes, lootboxData, isPendingLootbox, isErrorLootbox } =
-        useLootbox();
-
-    // const { data } = useSuiClientQuery('getObject', {
-    //     id: '0xc103d5d0fddfed882db1c2fbbf86110e70296cbd23df0f541433f34c0e075863',
-    //     options: {
-    //         showContent: true,
-    //     },
-    // });
-
-    // if (lootboxes === null) return <div>Not found</div>;
+    const { lootboxData, isPendingLootbox, isErrorLootbox } = useLootbox();
 
     if (isPendingLootbox) {
         return <div>Loading...</div>;
@@ -28,8 +30,6 @@ export default function Home() {
         return <div>Error loading lootboxes.</div>;
     }
 
-    console.log(lootboxes);
-
     if (!account) {
         return (
             <div className="text-center font-normal">
@@ -38,33 +38,14 @@ export default function Home() {
         );
     }
 
-    // if (!lootboxData) {
-    //     return (
-    //         <>
-    //             <div className="text-center font-normal">
-    //                 No lootboxes found.
-    //             </div>
-    //             <div
-    //                 className="w-fit p-2 rounded-lg bg-white cursor-pointer"
-    //                 onClick={() => handleFetchLootboxes()}
-    //             >
-    //                 Refresh
-    //             </div>
-    //         </>
-    //     );
-    // }
+    console.log(lootboxData);
 
     return (
         <div className="relative min-h-[60vh] text-center font-bold text-xl">
             <div className="flex justify-between p-8 gap-8 rounded-lg border border-black">
                 <h1>Lootboxes</h1>
-                {lootboxData?.map((lootbox, index) => (
-                    <div key={index}>
-                        <h3>Lootbox ID: {lootbox.objectId}</h3>
-                        <p>Type: {lootbox.type}</p>
-                        <p>Version: {lootbox.version}</p>
-                        {/* Add other fields you want to display */}
-                    </div>
+                {lootboxData?.map((lootbox: LootboxData, index) => (
+                    <LootboxCard key={index} lootbox={lootbox} />
                 ))}
             </div>
             <div

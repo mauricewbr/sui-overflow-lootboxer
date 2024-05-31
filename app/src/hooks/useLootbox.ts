@@ -3,7 +3,6 @@ import { SuiObjectData } from '@mysten/sui.js/client';
 import { useEffect, useState } from 'react';
 
 interface UseLootbox {
-    lootboxes: string[] | null;
     lootboxData: any[] | null;
     isPendingLootbox: boolean;
     isErrorLootbox: boolean;
@@ -17,6 +16,25 @@ function getRegistryData(data: SuiObjectData) {
     return data.content.fields as {
         admin: string;
         lootboxes: string[];
+    };
+}
+
+function getLootboxData(data: SuiObjectData | null | undefined) {
+    if (!data) return;
+
+    if (data.content?.dataType !== 'moveObject') {
+        return null;
+    }
+
+    return data.content.fields as {
+        lootbox: string;
+        registry: string;
+        nft_id: string;
+        public_key: string[];
+        assets: any[];
+        default_asset: any;
+        fees: any;
+        base_fee_in_bp: number;
     };
 }
 
@@ -55,7 +73,7 @@ export const useLootbox = (): UseLootbox => {
             })) || [],
         combine: (result) => {
             return {
-                data: result.map((res) => res.data),
+                data: result.map((res) => getLootboxData(res.data?.data)),
                 isSuccess: result.every((res) => res.isSuccess),
                 isPending: result.some((res) => res.isPending),
                 isError: result.some((res) => res.isError),
@@ -64,7 +82,6 @@ export const useLootbox = (): UseLootbox => {
     });
 
     return {
-        lootboxes,
         lootboxData,
         isPendingLootbox,
         isErrorLootbox,
